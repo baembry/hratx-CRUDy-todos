@@ -12,8 +12,8 @@ var counter = 0;
 // https://www.google.com/search?q=what+is+a+zero+padded+number%3F
 
 const zeroPaddedNumber = (num) => {
-  console.log('number to pad', num)
-  const paddedNumber =  sprintf('%05d', num);
+  console.log('number to pad', num);
+  const paddedNumber = sprintf('%05d', num);
   console.log("padded id ", paddedNumber);
   return paddedNumber
 };
