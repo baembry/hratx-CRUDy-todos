@@ -1,17 +1,16 @@
-
 // Todo Model //////////////////////////////////////////////////////////////////
 
 window.Todo = {
-
-  url: '/todo',
+  url: "/todo",
 
   // Create (Crud) -- collection
   create: function(text, callback) {
     return $.ajax({
       url: this.url,
-      type: 'POST',
-      dataType: 'json',
-      data: {todoText: text},
+      crossOrigin: null,
+      type: "POST",
+      dataType: "json",
+      data: { todoText: text },
       success: callback
     });
   },
@@ -20,8 +19,8 @@ window.Todo = {
   readAll: function(callback) {
     return $.ajax({
       url: this.url,
-      type: 'GET',
-      dataType: 'json',
+      type: "GET",
+      dataType: "json",
       success: callback
     });
   },
@@ -30,8 +29,8 @@ window.Todo = {
   readOne: function(id, callback) {
     return $.ajax({
       url: `${this.url}/${id}`,
-      type: 'GET',
-      dataType: 'json',
+      type: "GET",
+      dataType: "json",
       success: callback
     });
   },
@@ -40,9 +39,9 @@ window.Todo = {
   update: function(id, text, callback) {
     return $.ajax({
       url: `${this.url}/${id}`,
-      type: 'PUT',
-      dataType: 'json',
-      data: {todoText: text},
+      type: "PUT",
+      dataType: "json",
+      data: { todoText: text },
       success: callback
     });
   },
@@ -51,8 +50,8 @@ window.Todo = {
   delete: function(id, callback) {
     return $.ajax({
       url: `${this.url}/${id}`,
-      type: 'DELETE',
-      dataType: 'json',
+      type: "DELETE",
+      dataType: "json",
       success: callback
     });
   }

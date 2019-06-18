@@ -1,36 +1,60 @@
-const fs = require('fs');
-const path = require('path');
-const _ = require('underscore');
-const counter = require('./counter');
+const fs = require("fs");
+const path = require("path");
+const _ = require("underscore");
+const counter = require("./counter");
 
 var items = {};
 
 // Public API - Fix these CRUD functions ///////////////////////////////////////
 
 exports.create = (text, callback) => {
-  counter.getNextUniqueId(
-    (counterString)=>{ fs.writeFile(__dirname + '/data/'+counterString+'.txt',text ,'utf8', 
-      (err)=>{
-        if(err) throw err;
-        console.log('succsses creating message')
-        callback(null, { counterString, text });
+  counter.getNextUniqueId(counterString => {
+    fs.writeFile(
+      __dirname + "/data/" + counterString + ".txt",
+      text,
+      "utf8",
+      err => {
+        if (err) throw err;
+        console.log("succsses creating message", { id: counterString, text });
+        callback(null, { id: counterString, text });
       }
-    )})
+    );
+  });
 };
 
-exports.readAll = (callback) => {
-fs.readdir(__dirname+'/data', 'utf8',(err , fileNames)=>{
-  if(err) {
-    throw err
-  } else {
-    //make an array of messages
-    //then...
-    let messages = fileNames.map(fileName=>(fs.read))
-    callback(null, fileNames);
-  }
-  
-})
-  
+exports.readAll = callback => {
+  fs.readdir(__dirname + "/data", "utf8", (err, fileNames) => {
+    if (err) {
+      throw err;
+    } else {
+      //make an array of messages
+      //then...
+      let messages = fileNames.map(
+        fileName =>
+          new Promise((resolve, reject) => {
+            fs.readFile(
+              __dirname + "/data/" + fileName,
+              "utf8",
+              (err, data) => {
+                if (err) {
+                  reject(err);
+                } else {
+                  resolve({ id: fileName.split(".")[0], text: data });
+                }
+              }
+            );
+          })
+      );
+      Promise.all(messages)
+        .then(messages => {
+          console.log(messages);
+          callback(null, messages);
+        })
+        .catch(err => {
+          callback(err);
+        });
+    }
+  });
 };
 
 exports.readOne = (id, callback) => {
@@ -40,13 +64,13 @@ exports.readOne = (id, callback) => {
   // } else {
   //   callback(null, { id, text });
   // }
-  fs.readFile(__dirname+'/data/'+id+'.txt' ,(err , data)=>{
-    if(err) {callback(err)}
-    else{
-       callback(null , {id , data})
+  fs.readFile(__dirname + "/data/" + id + ".txt", (err, data) => {
+    if (err) {
+      callback(err);
+    } else {
+      callback(null, { id, data });
     }
-   
-  })
+  });
 };
 
 exports.update = (id, text, callback) => {
@@ -57,14 +81,14 @@ exports.update = (id, text, callback) => {
   //   items[id] = text;
   //   callback(null, { id, text });
   // }
- 
-  fs.writeFile(__dirname+'/data/'+id+'.txt' , text , 'utf8',(err)=>{
-     if(err) {
-       callback(err)
-    }else {
-      callback(null,{id , text})
+
+  fs.writeFile(__dirname + "/data/" + id + ".txt", text, "utf8", err => {
+    if (err) {
+      callback(err);
+    } else {
+      callback(null, { id, text });
     }
-  })
+  });
 };
 
 exports.delete = (id, callback) => {
@@ -76,18 +100,18 @@ exports.delete = (id, callback) => {
   // } else {
   //   callback();
   // }
-  fs.unlink(__dirname+'/data/'+id+'.txt', (err)=>{
-    if(err){
-      callback(err)
-    }else{
+  fs.unlink(__dirname + "/data/" + id + ".txt", err => {
+    if (err) {
+      callback(err);
+    } else {
       callback();
     }
-  })
+  });
 };
 
 // Config+Initialization code -- DO NOT MODIFY /////////////////////////////////
 
-exports.dataDir = path.join(__dirname, 'data');
+exports.dataDir = path.join(__dirname, "data");
 
 exports.initialize = () => {
   if (!fs.existsSync(exports.dataDir)) {
