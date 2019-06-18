@@ -8,17 +8,15 @@ var items = {};
 // Public API - Fix these CRUD functions ///////////////////////////////////////
 
 exports.create = (text, callback) => {
-  counter.getNextUniqueId(counterString => {
-    fs.writeFile(
-      __dirname + "/data/" + counterString + ".txt",
-      text,
-      "utf8",
-      err => {
-        if (err) throw err;
-        console.log("succsses creating message", { id: counterString, text });
-        callback(null, { id: counterString, text });
-      }
-    );
+  counter.getNextUniqueId(null, (err, id) => {
+    if (err) {
+      throw new Error();
+    }
+    fs.writeFile(__dirname + "/data/" + id + ".txt", text, "utf8", err => {
+      if (err) throw new Error();
+      console.log("succsses creating message", { id: id, text });
+      callback(null, { id: id, text });
+    });
   });
 };
 

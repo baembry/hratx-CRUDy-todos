@@ -1,6 +1,6 @@
-const fs = require('fs');
-const path = require('path');
-const sprintf = require('sprintf-js').sprintf;
+const fs = require("fs");
+const path = require("path");
+const sprintf = require("sprintf-js").sprintf;
 
 var counter = 0;
 
@@ -11,47 +11,79 @@ var counter = 0;
 // Wikipedia entry on Leading Zeros and check out some of code links:
 // https://www.google.com/search?q=what+is+a+zero+padded+number%3F
 
-const zeroPaddedNumber = (num) => {
-  console.log('number to pad', num);
-  const paddedNumber = sprintf('%05d', num);
-  console.log("padded id ", paddedNumber);
-  return paddedNumber
+const zeroPaddedNumber = num => {
+  const paddedNumber = sprintf("%05d", num);
+  return paddedNumber;
 };
 
-const readCounter = (callback) => {
+const readCounter = (error, callback) => {
+  if (error) {
+    callback(error);
+  }
   fs.readFile(exports.counterFile, (err, fileData) => {
     if (err) {
-      throw ('error reading counter');
+      throw new Error();
     } else {
-      console.log("from readcounter  ",Number(fileData));
-      callback( Number(fileData) ,callback);
-
+      callback(null, Number(fileData));
     }
   });
 };
 
-const writeCounter = (count, callback) => {
-  console.log("write counter ", count, callback)
+const writeCounter = (error, count, callback) => {
+  console.log("WriteCounter", error, count);
+  if (error) {
+    callback(error);
+  }
   var counterString = zeroPaddedNumber(count + 1);
-  fs.writeFile(exports.counterFile, counterString, (err) => {
+  fs.writeFile(exports.counterFile, counterString, err => {
     if (err) {
-      throw ('error writing counter');
+      throw new Error();
     } else {
-      console.log('succsses incriminting id counter ', counterString)
+      console.log("succsses incriminting id counter ", counterString);
       //callback
-      callback(counterString)
+      callback(null, counterString);
     }
   });
 };
 
 // Public API - Fix this function //////////////////////////////////////////////
 
-exports.getNextUniqueId = (callback) => {
-  return readCounter((count)=>{writeCounter(count, callback)})
+exports.getNextUniqueId = function(hollerback) {
+  readCounter(null, function(error, id, callback) {
+    if (error) {
+      callback(error);
+    } else {
+      writeCounter(error, id, function(error, idString, callback) {
+        if (error) {
+          callback(error);
+        } else {
+          hollerback(null, idString);
+        }
+      });
+    }
+  });
 };
 
-
+// readCounter(null, function(error, count, callback) {
+//   writeCounter(error, count, function(error, callback) {
+//     if (error) {
+//       throw error;
+//     }
+//     fs.writeFile(
+//       __dirname + "/data/" + counterString + ".txt",
+//       text,
+//       "utf8",
+//       err => {
+//         if (err) throw err;
+//         console.log("succsses creating message", { id: counterString, text });
+//         callback(null, { id: counterString, text });
+//       }
+//     );
+//   });
+// });
+// count => {writeCounter(null, count, callback);
+// });
 
 // Configuration -- DO NOT MODIFY //////////////////////////////////////////////
 
-exports.counterFile = path.join(__dirname, 'counter.txt');
+exports.counterFile = path.join(__dirname, "counter.txt");

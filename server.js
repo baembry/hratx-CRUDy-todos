@@ -30,7 +30,6 @@ app.post("/todo", (req, res) => {
 
 // Read all (cRud) -- collection route
 app.get("/todo", (req, res) => {
-  console.log("Getting to dos", req);
   Todo.readAll((err, todos) => {
     if (err) {
       res.sendStatus(400);
