@@ -17,50 +17,85 @@ const zeroPaddedNumber = num => {
 };
 
 const readCounter = (error, callback) => {
-  if (error) {
-    callback(error);
-  }
-  fs.readFile(exports.counterFile, (err, fileData) => {
-    if (err) {
-      throw new Error();
-    } else {
-      callback(null, Number(fileData));
-    }
-  });
-  //   return new Promise((resolve , reject)=>{
-  //       fs.readFile(exports.counterFile, (err, fileData) => {
-  //     if (err) {
-  //       reject(err)
-  //     } else {
-  //       resolve( Number(fileData));
-  //     }
-  //   });
+  // if (error) {
+  //   callback(error);
+  // }
+  // fs.readFile(exports.counterFile, (err, fileData) => {
+  //   if (err) {
+  //     throw new Error();
+  //   } else {
+  //     callback(null, Number(fileData));
   //   }
-  // )
+  // });
+  return new Promise((resolve, reject) => {
+    fs.readFile(exports.counterFile, (err, fileData) => {
+      if (err) {
+        reject(err);
+      } else {
+        resolve(Number(fileData));
+      }
+    });
+  });
 };
 
-const writeCounter = (error, count, callback) => {
-  if (error) {
-    callback(error);
-  }
-  var counterString = zeroPaddedNumber(count + 1);
-  fs.writeFile(exports.counterFile, counterString, err => {
-    if (err) {
-      throw new Error();
-    } else {
-      //callback
-      callback(null, counterString);
-    }
+const writeCounter = (count, callback) => {
+  // if (error) {
+  //   callback(error);
+  // }
+  // var counterString = zeroPaddedNumber(count + 1);
+  // fs.writeFile(exports.counterFile, counterString, err => {
+  //   if (err) {
+  //     throw new Error();
+  //   } else {
+  //     //callback
+  //     callback(null, counterString);
+  //   }
+  // });
+  return new Promise((resolve, reject) => {
+    var counterString = zeroPaddedNumber(count + 1);
+    fs.writeFile(exports.counterFile, counterString, err => {
+      if (err) {
+        reject(err);
+      } else {
+        //callback
+        resolve(counterString);
+      }
+    });
   });
 };
 
 // Public API - Fix this function //////////////////////////////////////////////
 
 exports.getNextUniqueId = function(recordMessage) {
-  readCounter(null, function(error, id, callback) {
-    writeCounter(error, id, function(error, idString, callback) {
-      recordMessage(null, idString);
-    });
+  // readCounter(null, function(error, id, callback) {
+  //   writeCounter(error, id, function(error, idString, callback) {
+  //     recordMessage(null, idString);
+  //   });
+  // });
+
+  //+++++Promisified version++++++
+  // readCounter()
+  //   .then(id => {
+  //     return writeCounter(id);
+  //   })
+  //   .then(idString => {
+  //     return recordMessage(idString);
+  //   })
+  //   .catch(err => {
+  //     throw err;
+  //   });
+
+  return new Promise(function(resolve, reject) {
+    readCounter()
+      .then(id => {
+        return writeCounter(id);
+      })
+      .then(idString => {
+        resolve(idString);
+      })
+      .catch(err => {
+        reject(err);
+      });
   });
 };
 

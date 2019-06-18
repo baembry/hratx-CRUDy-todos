@@ -54,6 +54,7 @@ app.get("/todo/:id", (req, res) => {
 app.put("/todo/:id", (req, res) => {
   Todo.update(req.params.id, req.body.todoText, (err, todo) => {
     if (todo) {
+      console.log("THE TODO", todo);
       res.status(200).json(todo);
     } else {
       res.sendStatus(404);

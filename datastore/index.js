@@ -2,65 +2,120 @@ const fs = require("fs");
 const path = require("path");
 const _ = require("underscore");
 const counter = require("./counter");
+const Promise = require("bluebird");
 
-var items = {};
-
+Promise.promisifyAll(fs);
 // Public API - Fix these CRUD functions ///////////////////////////////////////
 
 exports.create = (text, callback) => {
-  counter.getNextUniqueId((err, id) => {
-    if (err) {
-      throw new Error();
-    }
-    fs.writeFile(exports.dataDir + "/" + id + ".txt", text, "utf8", err => {
-      if (err) throw new Error();
-      callback(null, { id: id, text });
+  // counter.getNextUniqueId(id => {
+  //   // if (err) {
+  //   //   throw new Error();
+  //   // }
+
+  //   fs.writeFile(exports.dataDir + "/" + id + ".txt", text, "utf8", err => {
+  //     if (err) throw new Error();
+  //     callback(null, { id: id, text });
+  //   });
+  // });
+
+  //========Promisified version works===========
+  // counter
+  //   .getNextUniqueId()
+  //   .then(id => {
+  //     console.log("ID", id);
+  //     fs.writeFile(exports.dataDir + "/" + id + ".txt", text, "utf8", err => {
+  //       if (err) throw new Error();
+  //       callback(null, { id: id, text });
+  //     });
+  //   })
+  //   .catch(err => {
+  //     throw err;
+  //   });
+  const date = new Date();
+  let texDate =
+    text +
+    "    " +
+    date.getHours() +
+    ":" +
+    date.getMinutes() +
+    "  " +
+    date.getDay() +
+    "/" +
+    date.getMonth() +
+    "/" +
+    date.getFullYear();
+  //=============Extra promisified version with Bluebird========
+  counter
+    .getNextUniqueId()
+    .then(id => {
+      fs.writeFileAsync(exports.dataDir + "/" + id + ".txt", texDate, "utf8");
+      return id;
+    })
+    .then(id => {
+      callback(null, { id, text: texDate });
+    })
+    .catch(err => {
+      throw err;
     });
-  });
-  // counter.getNextUniqueId()
 };
 
 exports.readAll = callback => {
-  fs.readdir(exports.dataDir, "utf8", (err, fileNames) => {
-    if (err) {
-      throw err;
-    } else {
-      //make an array of messages
-      //then...
-      let messages = fileNames.map(
+  // fs.readdir(exports.dataDir, "utf8", (err, fileNames) => {
+  //   if (err) {
+  //     throw err;
+  //   } else {
+  //     //make an array of messages
+  //     //then...
+  //     let messages = fileNames.map(
+  //       fileName =>
+  //         new Promise((resolve, reject) => {
+  //           fs.readFile(
+  //             exports.dataDir + "/" + fileName,
+  //             "utf8",
+  //             (err, data) => {
+  //               if (err) {
+  //                 reject(err);
+  //               } else {
+  //                 resolve({ id: fileName.split(".")[0], text: data });
+  //               }
+  //             }
+  //           );
+  //         })
+  //     );
+  //     Promise.all(messages)
+  //       .then(messages => {
+  //         callback(null, messages);
+  //       })
+  //       .catch(err => {
+  //         throw err;
+  //       });
+  //   }
+  // });
+  fs.readdirAsync(exports.dataDir, "utf8")
+    .then(filenames => {
+      return filenames.map(
         fileName =>
           new Promise((resolve, reject) => {
-            fs.readFile(
+            fs.readFileAsync(
               exports.dataDir + "/" + fileName,
               "utf8",
               (err, data) => {
-                if (err) {
-                  reject(err);
-                } else {
-                  resolve({ id: fileName.split(".")[0], text: data });
-                }
+                resolve({ id: fileName.split(".")[0], text: data });
               }
             );
           })
       );
-      Promise.all(messages)
-        .then(messages => {
-          callback(null, messages);
-        })
-        .catch(err => {
-          throw err;
-        });
-    }
-  });
+    })
+    .then(messages => {
+      return Promise.all(messages);
+    })
+    .then(messages => {
+      callback(null, messages);
+    });
 };
 
 exports.readOne = (id, callback) => {
-  // var text = items[id];
-  // if (!text) {
-  //   callback(new Error(`No item with id: ${id}`));
-  // } else {
-  //   callback(null, { id, text });
-  // }
   fs.readFile(exports.dataDir + "/" + id + ".txt", "utf8", (err, data) => {
     if (err) {
       callback(err);
@@ -71,28 +126,33 @@ exports.readOne = (id, callback) => {
 };
 
 exports.update = (id, text, callback) => {
-  // var item = items[id];
-  // if (!item) {
-  //   callback(new Error(`No item with id: ${id}`));
-  // } else {
-  //   items[id] = text;
-  //   callback(null, { id, text });
-  // }
+  //==========Callback version works ===========
   const file = exports.dataDir + "/" + id + ".txt";
-  fs.access(file, fs.constants.F_OK, err => {
-    if (err) {
-      callback(err);
-      return;
-    }
-    console.log("File found ", file);
-    fs.writeFile(file, text, "utf8", (err, data) => {
-      if (err) {
-        callback(err);
-      } else {
-        callback(null, { id, text: data });
-      }
+  // fs.access(file, fs.constants.F_OK, err => {
+  //   if (err) {
+  //     callback(err);
+  //     return;
+  //   }
+  //   console.log("File found ", file);
+  //   fs.writeFile(file, text, "utf8", (err, data) => {
+  //     if (err) {
+  //       callback(err);
+  //     } else {
+  //       callback(null, { id, text: data });
+  //     }
+  //   });
+  // });
+  //=============Promisified version==============
+  fs.accessAsync(file, fs.constants.F_OK)
+    .then(() =>
+      fs.writeFileAsync(file, text, "utf8").then(() => {
+        callback(null, { id, text: text });
+      })
+    )
+
+    .catch(err => {
+      throw err;
     });
-  });
 };
 
 exports.delete = (id, callback) => {
@@ -104,13 +164,21 @@ exports.delete = (id, callback) => {
   // } else {
   //   callback();
   // }
-  fs.unlink(exports.dataDir + "/" + id + ".txt", err => {
-    if (err) {
-      callback(err);
-    } else {
-      callback();
-    }
-  });
+  //   fs.unlink(exports.dataDir + "/" + id + ".txt", err => {
+  //     if (err) {
+  //       callback(err);
+  //     } else {
+  //       callback();
+  //     }
+  //   });
+
+  //=============Promisified version==============
+
+  fs.unlinkAsync(exports.dataDir + "/" + id + ".txt")
+    .then(callback)
+    .catch(err => {
+      throw err;
+    });
 };
 
 // Config+Initialization code -- DO NOT MODIFY /////////////////////////////////
