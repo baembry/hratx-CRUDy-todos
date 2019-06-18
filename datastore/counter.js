@@ -27,10 +27,19 @@ const readCounter = (error, callback) => {
       callback(null, Number(fileData));
     }
   });
+  //   return new Promise((resolve , reject)=>{
+  //       fs.readFile(exports.counterFile, (err, fileData) => {
+  //     if (err) {
+  //       reject(err)
+  //     } else {
+  //       resolve( Number(fileData));
+  //     }
+  //   });
+  //   }
+  // )
 };
 
 const writeCounter = (error, count, callback) => {
-  console.log("WriteCounter", error, count);
   if (error) {
     callback(error);
   }
@@ -39,7 +48,6 @@ const writeCounter = (error, count, callback) => {
     if (err) {
       throw new Error();
     } else {
-      console.log("succsses incriminting id counter ", counterString);
       //callback
       callback(null, counterString);
     }
@@ -48,41 +56,13 @@ const writeCounter = (error, count, callback) => {
 
 // Public API - Fix this function //////////////////////////////////////////////
 
-exports.getNextUniqueId = function(hollerback) {
+exports.getNextUniqueId = function(recordMessage) {
   readCounter(null, function(error, id, callback) {
-    if (error) {
-      callback(error);
-    } else {
-      writeCounter(error, id, function(error, idString, callback) {
-        if (error) {
-          callback(error);
-        } else {
-          hollerback(null, idString);
-        }
-      });
-    }
+    writeCounter(error, id, function(error, idString, callback) {
+      recordMessage(null, idString);
+    });
   });
 };
-
-// readCounter(null, function(error, count, callback) {
-//   writeCounter(error, count, function(error, callback) {
-//     if (error) {
-//       throw error;
-//     }
-//     fs.writeFile(
-//       __dirname + "/data/" + counterString + ".txt",
-//       text,
-//       "utf8",
-//       err => {
-//         if (err) throw err;
-//         console.log("succsses creating message", { id: counterString, text });
-//         callback(null, { id: counterString, text });
-//       }
-//     );
-//   });
-// });
-// count => {writeCounter(null, count, callback);
-// });
 
 // Configuration -- DO NOT MODIFY //////////////////////////////////////////////
 

@@ -8,20 +8,20 @@ var items = {};
 // Public API - Fix these CRUD functions ///////////////////////////////////////
 
 exports.create = (text, callback) => {
-  counter.getNextUniqueId(null, (err, id) => {
+  counter.getNextUniqueId((err, id) => {
     if (err) {
       throw new Error();
     }
-    fs.writeFile(__dirname + "/data/" + id + ".txt", text, "utf8", err => {
+    fs.writeFile(exports.dataDir + "/" + id + ".txt", text, "utf8", err => {
       if (err) throw new Error();
-      console.log("succsses creating message", { id: id, text });
       callback(null, { id: id, text });
     });
   });
+  // counter.getNextUniqueId()
 };
 
 exports.readAll = callback => {
-  fs.readdir(__dirname + "/data", "utf8", (err, fileNames) => {
+  fs.readdir(exports.dataDir, "utf8", (err, fileNames) => {
     if (err) {
       throw err;
     } else {
@@ -31,7 +31,7 @@ exports.readAll = callback => {
         fileName =>
           new Promise((resolve, reject) => {
             fs.readFile(
-              __dirname + "/data/" + fileName,
+              exports.dataDir + "/" + fileName,
               "utf8",
               (err, data) => {
                 if (err) {
@@ -45,11 +45,10 @@ exports.readAll = callback => {
       );
       Promise.all(messages)
         .then(messages => {
-          console.log(messages);
           callback(null, messages);
         })
         .catch(err => {
-          callback(err);
+          throw err;
         });
     }
   });
@@ -62,11 +61,11 @@ exports.readOne = (id, callback) => {
   // } else {
   //   callback(null, { id, text });
   // }
-  fs.readFile(__dirname + "/data/" + id + ".txt", (err, data) => {
+  fs.readFile(exports.dataDir + "/" + id + ".txt", "utf8", (err, data) => {
     if (err) {
       callback(err);
     } else {
-      callback(null, { id, data });
+      callback(null, { id, text: data });
     }
   });
 };
@@ -79,13 +78,20 @@ exports.update = (id, text, callback) => {
   //   items[id] = text;
   //   callback(null, { id, text });
   // }
-
-  fs.writeFile(__dirname + "/data/" + id + ".txt", text, "utf8", err => {
+  const file = exports.dataDir + "/" + id + ".txt";
+  fs.access(file, fs.constants.F_OK, err => {
     if (err) {
       callback(err);
-    } else {
-      callback(null, { id, text });
+      return;
     }
+    console.log("File found ", file);
+    fs.writeFile(file, text, "utf8", (err, data) => {
+      if (err) {
+        callback(err);
+      } else {
+        callback(null, { id, text: data });
+      }
+    });
   });
 };
 
@@ -98,7 +104,7 @@ exports.delete = (id, callback) => {
   // } else {
   //   callback();
   // }
-  fs.unlink(__dirname + "/data/" + id + ".txt", err => {
+  fs.unlink(exports.dataDir + "/" + id + ".txt", err => {
     if (err) {
       callback(err);
     } else {
