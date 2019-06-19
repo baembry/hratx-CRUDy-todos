@@ -7,7 +7,7 @@ const Promise = require("bluebird");
 Promise.promisifyAll(fs);
 // Public API - Fix these CRUD functions ///////////////////////////////////////
 
-exports.create = (text, callback) => {
+exports.create = async (text, callback) => {
   // counter.getNextUniqueId(id => {
   //   // if (err) {
   //   //   throw new Error();
@@ -46,18 +46,23 @@ exports.create = (text, callback) => {
     "/" +
     date.getFullYear();
   //=============Extra promisified version with Bluebird========
-  counter
-    .getNextUniqueId()
-    .then(id => {
-      fs.writeFileAsync(exports.dataDir + "/" + id + ".txt", texDate, "utf8");
-      return id;
-    })
-    .then(id => {
-      callback(null, { id, text: texDate });
-    })
-    .catch(err => {
-      throw err;
-    });
+  // counter
+  //   .getNextUniqueId()
+  //   .then(id => {
+  //     fs.writeFileAsync(exports.dataDir + "/" + id + ".txt", texDate, "utf8");
+  //     return id;
+  //   })
+  //   .then(id => {
+  //     callback(null, { id, text: texDate });
+  //   })
+  //   .catch(err => {
+  //     throw err;
+  //   });
+
+  //===========ASYNC/AWAIT versino===========
+  const id = await counter.getNextUniqueId();
+  await fs.writeFileAsync(exports.dataDir + "/" + id + ".txt", texDate, "utf8");
+  callback(null, { id, text: texDate });
 };
 
 exports.readAll = callback => {
